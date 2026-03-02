@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>No Added Sugar — March 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0f1a0f;
+      font-family: Georgia, serif;
+      color: #e8f0e8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, #1a3a1a 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, #0d2a0d 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .month-label {
+      font-size: 13px;
+      letter-spacing: 6px;
+      color: #6a9a6a;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 42px;
+      font-weight: 400;
+      letter-spacing: -1px;
+      color: #c8e8c0;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: #5a7a5a;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    .save-status {
+      font-size: 11px;
+      color: #4a7a4a;
+      min-height: 20px;
+      margin-top: 8px;
+      letter-spacing: 1px;
+      transition: opacity 0.3s;
+    }
+
+    .save-status.error { color: #e07070; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #5a7a5a;
+      margin-top: 4px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a9a4a, #7dd87d);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
+
+    .cal-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .cal-day-name {
+      text-align: center;
+      font-size: 11px;
+      color: #4a6a4a;
+      letter-spacing: 1px;
+      padding: 4px 0;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .cal-cell.future {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .cal-cell.success {
+      background: rgba(80,160,80,0.18);
+      border-color: rgba(100,200,100,0.3);
+    }
+
+    .cal-cell.fail {
+      background: rgba(200,60,60,0.15);
+      border-color: rgba(200,60,60,0.3);
+    }
+
+    .cal-cell.today {
+      border: 2px solid #7dd87d !important;
+    }
+
+    .cal-cell:not(.future):hover {
+      transform: scale(1.05);
+    }
+
+    .cal-num {
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .cal-num.future { color: #3a5a3a; }
+    .cal-num.empty  { color: #8aaa8a; }
+    .cal-num.success { color: #7dd87d; }
+    .cal-num.fail   { color: #e07070; }
+
+    .cal-mark {
+      font-size: 10px;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .today-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #7dd87d;
+      margin-top: 2px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #5a7a5a;
+      flex-wrap: wrap;
+    }
+
+    .legend-success { color: #7dd87d; }
+    .legend-fail { color: #e07070; }
+
+    .quote-box {
+      margin-top: 32px;
+      padding: 20px 24px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      text-align: center;
+      font-style: italic;
+      color: #6a8a6a;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .slip-msg {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 12px;
+      color: #a06060;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="month-label">March 2026</div>
+    <h1>No Added<br>Sugar</h1>
+    <p class="subtitle">Natural sugars &amp; fruit are welcome 🍎</p>
+    <div class="save-status" id="saveStatus"></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="cleanCount" style="color:#7dd87d">0</div>
+      <div class="stat-label">Clean days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="streakCount" style="color:#f0c060">0🔥</div>
+      <div class="stat-label">Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="progressPct" style="color:#88c8ff">0%</div>
+      <div class="stat-label">Progress</div>
+    </div>
+  </div>
+
+  <div class="progress-bar-bg">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <div class="cal-header" id="calHeader"></div>
+  <div class="cal-grid" id="calGrid"></div>
+
+  <div class="legend">
+    <span>Tap a day to mark:</span>
+    <span class="legend-success">✓ clean</span>
+    <span class="legend-fail">✗ slipped</span>
+  </div>
+
+  <div class="quote-box" id="quoteBox"></div>
+  <div class="slip-msg" id="slipMsg"></div>
+</div>
+
+<script>
+  const MARCH_DAYS = 31;
+  const STORAGE_KEY = 'sugar-tracker-march-2026';
+  const TODAY = new Date();
+  const CURRENT_DAY = (TODAY.getMonth() === 2 && TODAY.getFullYear() === 2026) ? TODAY.getDate() : 1;
+
+  const STATUS = { future: 'future', success: 'success', fail: 'fail', empty: 'empty' };
+  const QUOTES = [
+    "Your body is thanking you.",
+    "Every day without sugar is a win.",
+    "Natural is the new sweet.",
+    "You're rewriting your cravings.",
+    "Fruit over fructose syrup, always.",
+    "Keep going. It gets easier.",
+    "Day by day, craving by craving.",
+  ];
+
+  // State
+  let days = {};
+  for (let i = 1; i <= MARCH_DAYS; i++) {
+    days[i] = i < CURRENT_DAY ? STATUS.empty : STATUS.future;
+  }
+
+  // Load from localStorage
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) days = JSON.parse(saved);
+  } catch(e) {}
+
+  // Save
+  let saveTimer;
+  function save() {
+    const el = document.getElementById('saveStatus');
+    el.textContent = 'saving...';
+    el.className = 'save-status';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
+        el.textContent = '✓ progress saved';
+        setTimeout(() => { el.textContent = ''; }, 1500);
+      } catch(e) {
+        el.textContent = '⚠ could not save';
+        el.className = 'save-status error';
+      }
+    }, 300);
+  }
+
+  // Day name headers
+  const dayNames = ['S','M','T','W','T','F','S'];
+  const calHeader = document.getElementById('calHeader');
+  dayNames.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-name';
+    el.textContent = d;
+    calHeader.appendChild(el);
+  });
+
+  // Calendar grid
+  const calGrid = document.getElementById('calGrid');
+  const marchStartDay = new Date(2026, 2, 1).getDay();
+
+  function renderGrid() {
+    calGrid.innerHTML = '';
+
+    // Empty offset cells
+    for (let i = 0; i < marchStartDay; i++) {
+      calGrid.appendChild(document.createElement('div'));
+    }
+
+    for (let day = 1; day <= MARCH_DAYS; day++) {
+      const status = days[day];
+      const isToday = day === CURRENT_DAY;
+      const isFuture = day > CURRENT_DAY;
+
+      const cell = document.createElement('div');
+      cell.className = 'cal-cell ' + status + (isToday ? ' today' : '');
+
+      const num = document.createElement('span');
+      num.className = 'cal-num ' + status;
+      num.textContent = day;
+      cell.appendChild(num);
+
+      if (status === STATUS.success || status === STATUS.fail) {
+        const mark = document.createElement('span');
+        mark.className = 'cal-mark';
+        mark.textContent = status === STATUS.success ? '✓' : '✗';
+        cell.appendChild(mark);
+      } else if (isToday) {
+        const dot = document.createElement('div');
+        dot.className = 'today-dot';
+        cell.appendChild(dot);
+      }
+
+      if (!isFuture) {
+        cell.addEventListener('click', () => {
+          const cur = days[day];
+          days[day] = cur === STATUS.success ? STATUS.fail
+                    : cur === STATUS.fail ? STATUS.empty
+                    : STATUS.success;
+          renderAll();
+          save();
+        });
+      }
+
+      calGrid.appendChild(cell);
+    }
+  }
+
+  function renderStats() {
+    const successCount = Object.values(days).filter(v => v === STATUS.success).length;
+    const failCount = Object.values(days).filter(v => v === STATUS.fail).length;
+    const progress = Math.round((successCount / MARCH_DAYS) * 100);
+
+    let streak = 0;
+    for (let i = 1; i <= CURRENT_DAY; i++) {
+      if (days[i] === STATUS.success) streak++;
+      else if (days[i] === STATUS.fail) streak = 0;
+    }
+
+    document.getElementById('cleanCount').textContent = successCount;
+    document.getElementById('streakCount').textContent = streak + '🔥';
+    document.getElementById('progressPct').textContent = progress + '%';
+    document.getElementById('progressBar').style.width = progress + '%';
+
+    const slipMsg = document.getElementById('slipMsg');
+    if (failCount > 0) {
+      slipMsg.textContent = failCount + ' slip' + (failCount > 1 ? 's' : '') + ' this month — every tomorrow is a fresh start.';
+    } else {
+      slipMsg.textContent = '';
+    }
+  }
+
+  function renderAll() {
+    renderGrid();
+    renderStats();
+  }
+
+  // Quote
+  document.getElementById('quoteBox').textContent = '"' + QUOTES[Math.floor(Math.random() * QUOTES.length)] + '"';
+
+  renderAll();
+</script>
+</body>
+</html>
